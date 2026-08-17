@@ -1,0 +1,155 @@
+.export-flow {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.step-content h3 {
+  margin-bottom: 24px;
+  color: var(--color-text-dark);
+}
+
+.formats-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.format-card {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 24px;
+  background: var(--color-card-bg);
+  border: 2px solid var(--color-border);
+  border-radius: var(--border-radius-m);
+  cursor: pointer;
+  transition: var(--transition-default);
+}
+
+.format-card:hover {
+  border-color: var(--color-primary-dark);
+  box-shadow: var(--shadow-2);
+}
+
+.format-card.selected {
+  border-color: var(--color-primary-dark);
+  background-color: var(--color-primary-light);
+}
+
+.format-icon {
+  color: var(--color-primary-dark);
+}
+
+.format-info {
+  flex: 1;
+}
+
+.format-info h4 {
+  margin-bottom: 4px;
+  color: var(--color-text-dark);
+}
+
+.radio-circle {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  position: relative;
+}
+
+.radio-circle.checked::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  background-color: var(--color-primary-dark);
+  border-radius: 50%;
+}
+
+.details-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-l);
+  margin: var(--spacing-xl) 0;
+}
+
+.template-card {
+  background: var(--color-card-bg);
+  padding: var(--spacing-xl);
+  border-radius: var(--border-radius-l);
+  border: 2px solid var(--color-border);
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition-default);
+  color: var(--color-text-dark);
+}
+
+.template-card:hover {
+  border-color: var(--color-secondary);
+  background-color: var(--color-background-alt);
+}
+
+.template-card.active {
+  border-color: var(--color-primary-dark);
+  background-color: var(--color-primary-light);
+  box-shadow: var(--shadow-2);
+}
+
+.tpl-preview {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-m);
+}
+
+.download-step {
+  text-align: center;
+}
+
+.success-banner {
+  margin-bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.success-banner h3 {
+  color: var(--color-text-dark);
+}
+
+.download-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.download-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  background-color: var(--color-background-alt);
+  border-radius: var(--border-radius-m);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-dark);
+}
+
+.dl-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+}

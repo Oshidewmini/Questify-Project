@@ -1,0 +1,30 @@
+/* Base component styles */
+
+.card {
+  background-color: var(--color-background);
+  border-radius: var(--border-radius-m);
+  padding: var(--spacing-l);
+  box-shadow: var(--shadow-1);
+  transition: var(--transition-default);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-2);
+  transform: translateY(-2px);
+}
+
+.badge {
+  padding: 4px 12px;
+  border-radius: var(--border-radius-s);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-primary { background-color: var(--color-primary-dark); color: white; }
+.badge-success { background-color: var(--color-success); color: white; }
+.badge-warning { background-color: var(--color-warning); color: var(--color-text-dark); }
+.badge-error { background-color: var(--color-error); color: white; }
+.badge-info { background-color: var(--color-primary-light); color: var(--color-primary-dark); }

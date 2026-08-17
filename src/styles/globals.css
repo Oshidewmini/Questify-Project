@@ -1,0 +1,229 @@
+@import './colors.css';
+@import './typography.css';
+@import './spacing.css';
+
+/* ===================================================
+   Global Reset & Base Styles
+=================================================== */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-dark);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: var(--transition-hover);
+}
+
+button {
+  font-family: inherit;
+}
+
+input, select, textarea {
+  font-family: inherit;
+}
+
+/* ===================================================
+   Page Layout
+=================================================== */
+.container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-xl);
+}
+
+.page-header {
+  padding: 32px 40px 24px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-background);
+  transition: all 0.3s ease;
+}
+
+/* ===================================================
+   Scrollbar Styling
+=================================================== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background-alt);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* ===================================================
+   Global Components
+=================================================== */
+
+/* Badge system */
+.badge {
+  padding: 3px 10px;
+  border-radius: var(--border-radius-full);
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.badge-primary { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+.badge-success { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+.badge-warning { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+.badge-error   { background: rgba(239, 68, 68, 0.15);  color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+.badge-info    { background: rgba(6, 182, 212, 0.15);  color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.3); }
+.badge-accent  { background: rgba(249, 115, 22, 0.15); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.3); }
+.badge-violet  { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.3); }
+.badge-bloom   { background: rgba(59, 130, 246, 0.12); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.2); }
+
+/* Light mode badge overrides */
+[data-theme='light'] .badge-primary { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+[data-theme='light'] .badge-success { background: #ecfdf5; color: #059669; border-color: #a7f3d0; }
+[data-theme='light'] .badge-warning { background: #fffbeb; color: #d97706; border-color: #fde68a; }
+[data-theme='light'] .badge-error   { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+[data-theme='light'] .badge-info    { background: #ecfeff; color: #0891b2; border-color: #a5f3fc; }
+[data-theme='light'] .badge-bloom   { background: #eff6ff; color: #3b82f6; border-color: #93c5fd; }
+
+/* Card base */
+.card {
+  background: var(--color-card-bg);
+  border-radius: var(--border-radius-l);
+  padding: var(--spacing-l);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-1);
+  transition: var(--transition-default);
+}
+
+.card:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: var(--shadow-2), var(--shadow-blue);
+  transform: translateY(-2px);
+}
+
+/* Glass card */
+.card-glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--border-radius-l);
+}
+
+/* Input & Select */
+.input-label {
+  display: block;
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-medium);
+  margin-bottom: 6px;
+  letter-spacing: var(--letter-spacing-wider);
+  text-transform: uppercase;
+}
+
+.select-input {
+  width: 100%;
+  padding: 11px 16px;
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--border-radius-m);
+  background-color: var(--color-input-bg);
+  color: var(--color-text-dark);
+  font-size: var(--font-size-body-small);
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  transition: var(--transition-default);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237aa2cc' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
+}
+
+.select-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* Form groups */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Step actions */
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
+}
+
+/* Validation */
+.validation-error {
+  color: var(--color-error);
+  font-size: var(--font-size-caption);
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ===================================================
+   Animation Utilities
+=================================================== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
+  50%       { box-shadow: 0 0 25px rgba(59, 130, 246, 0.5); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.animate-fade-in-up { animation: fadeInUp 0.4s ease-out; }
+.animate-fade-in    { animation: fadeIn 0.3s ease-out; }

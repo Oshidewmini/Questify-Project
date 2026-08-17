@@ -1,0 +1,94 @@
+.library-controls {
+  display: flex;
+  gap: var(--spacing-m);
+  margin-bottom: var(--spacing-xl);
+  align-items: center;
+}
+
+.search-bar {
+  flex: 1;
+}
+
+.control-actions {
+  display: flex;
+  gap: var(--spacing-s);
+  align-items: center;
+}
+
+.sort-select {
+  padding: 8px 12px;
+  min-width: 150px;
+}
+
+.papers-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-m);
+}
+
+.paper-library-card {
+  background: var(--color-card-bg);
+  padding: var(--spacing-l);
+  border-radius: var(--border-radius-m);
+  border: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: var(--transition-default);
+}
+
+.paper-library-card:hover {
+  box-shadow: var(--shadow-2);
+  transform: translateY(-2px);
+}
+
+.paper-card-main {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-l);
+}
+
+.paper-icon {
+  background-color: var(--color-primary-light);
+  padding: 12px;
+  border-radius: var(--border-radius-m);
+}
+
+.paper-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paper-info h4 {
+  color: var(--color-text-dark);
+}
+
+.paper-info p {
+  color: var(--color-text-medium);
+}
+
+.paper-badges {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.paper-card-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-m);
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-medium);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--border-radius-full);
+}
+
+.icon-btn:hover {
+  background-color: var(--color-background-alt);
+}

@@ -1,0 +1,102 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary-light) 100%);
+  padding: var(--spacing-m);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-l);
+  padding: var(--spacing-xxl);
+  box-shadow: var(--shadow-4);
+  animation: slideUp 0.5s ease-out;
+  transition: all 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+.brand-name {
+  color: var(--color-primary-dark);
+  font-size: var(--font-size-h2);
+  margin-bottom: var(--spacing-xs);
+}
+
+.tagline {
+  color: var(--color-text-medium);
+  font-size: var(--font-size-body-small);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-m);
+}
+
+.password-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.forgot-password {
+  align-self: flex-end;
+  font-size: var(--font-size-body-small);
+  color: var(--color-accent);
+  margin-top: var(--spacing-s);
+}
+
+.login-btn {
+  width: 100%;
+  margin-top: var(--spacing-s);
+}
+
+.login-footer {
+  margin-top: var(--spacing-xl);
+  text-align: center;
+  font-size: var(--font-size-body-small);
+  color: var(--color-text-medium);
+}
+
+.signup-link {
+  color: var(--color-accent);
+  font-weight: var(--font-weight-semibold);
+}
+
+.legal-links {
+  margin-top: var(--spacing-xl);
+  color: var(--color-text-medium);
+  font-size: var(--font-size-caption);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-links {
+  display: flex;
+  gap: var(--spacing-m);
+}
+
+@media (max-width: 768px) {
+  .login-page {
+    background: var(--color-background);
+  }
+  .login-card {
+    box-shadow: none;
+    max-width: 100%;
+    padding: var(--spacing-l);
+    border: none;
+  }
+}
