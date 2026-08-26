@@ -6,7 +6,7 @@
 }
 
 .analytics-card {
-  background: white;
+  background: var(--color-card-bg);
   padding: var(--spacing-xl);
   border-radius: var(--border-radius-l);
   box-shadow: var(--shadow-1);

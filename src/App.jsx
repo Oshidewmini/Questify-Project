@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
 import LoginPage from './components/pages/LoginPage';
 import DashboardPage from './components/pages/DashboardPage';
 import UploadConfigurePage from './components/pages/UploadConfigurePage';
@@ -10,26 +11,96 @@ import LibraryPage from './components/pages/LibraryPage';
 import SettingsPage from './components/pages/SettingsPage';
 import './styles/globals.css';
 
-const Placeholder = ({ title }) => (
-  <div style={{ padding: '40px', textAlign: 'center' }}>
-    <h1 style={{ color: 'var(--color-primary-dark)' }}>{title}</h1>
-    <p>This feature is coming soon.</p>
-    <a href="/dashboard" style={{ color: 'var(--color-secondary)' }}>Back to Dashboard</a>
-  </div>
-);
+const ProtectedRoute = ({ children }) => {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  return children;
+};
+
+const PublicRoute = ({ children }) => {
+  const { user } = useAuth();
+  if (user) return <Navigate to="/dashboard" replace />;
+  return children;
+};
 
 function App() {
+  const { loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center' }}>
+        <p>Loading…</p>
+      </div>
+    );
+  }
+
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/upload" element={<UploadConfigurePage />} />
-        <Route path="/review" element={<ReviewPage />} />
-        <Route path="/export" element={<ExportPage />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
-        <Route path="/library" element={<LibraryPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <LoginPage />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/upload"
+          element={
+            <ProtectedRoute>
+              <UploadConfigurePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/review"
+          element={
+            <ProtectedRoute>
+              <ReviewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/export"
+          element={
+            <ProtectedRoute>
+              <ExportPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <AnalyticsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/library"
+          element={
+            <ProtectedRoute>
+              <LibraryPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import engine, Base
 from .models import user, paper
-from .api import papers
+from .api import papers, generate
 
 # Create all tables (in MVP we use this instead of Alembic for immediate setup)
 Base.metadata.create_all(bind=engine)
@@ -19,6 +19,7 @@ app.add_middleware(
 )
 
 app.include_router(papers.router, prefix="/api/v1")
+app.include_router(generate.router, prefix="/api/v1")
 
 @app.get("/")
 def read_root():

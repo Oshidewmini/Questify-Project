@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../sections/Sidebar';
-import { CloudUpload, File, Check, Sparkles, ArrowLeft, BookOpen, Info, Clock, Target } from 'lucide-react';
+import {
+  CloudUpload, File, Check, Sparkles, ArrowLeft, BookOpen, Info, Clock,
+  ChevronUp, ChevronDown, Trash2, Loader2
+} from 'lucide-react';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
 import { useNavigate } from 'react-router-dom';
 import {
-  getBoardOptions, getLevelOptions, getSubjectOptions,
-  getSubjectsByCategory, getDefaultBloom, getDefaultAoSplit, getAoProfile
+  getBoardOptions, getLevelOptions,
+  getSubjectsByCategory, getDefaultBloom, getAoProfile
 } from '../../data/syllabi';
 import { getTemplatesForBoard } from '../../data/paperTemplates';
+import { QUESTION_TYPES, BLOOM_COLORS, EMPTY_TYPE_COUNTS, sumTypeCounts } from '../../data/questionTypes';
+import { useGenerate } from '../../context/GenerateContext';
+import { extractDocuments } from '../../services/api';
 import './UploadConfigurePage.css';
 
-/* ============================================================
-   Sub-components
-============================================================ */
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 const BloomSlider = ({ label, value, onChange, color }) => (
   <div className="bloom-slider-container">
@@ -34,115 +38,164 @@ const BloomSlider = ({ label, value, onChange, color }) => (
   </div>
 );
 
+const makeFileId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-const BLOOM_COLORS = {
-  Remember:   '#60a5fa',
-  Understand: '#818cf8',
-  Apply:      '#a78bfa',
-  Analyze:    '#c084fc',
-  Evaluate:   '#e879f9',
-  Create:     '#f472b6'
-};
+const labelFromName = (name) =>
+  (name || 'Untitled').replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
 
-const BLOOM_AO_MAP = {
-  Remember:   'AO1', Understand: 'AO1',
-  Apply:      'AO2', Analyze:    'AO2',
-  Evaluate:   'AO3', Create:     'AO3'
-};
-
-/* ============================================================
-   Question Type Options
-============================================================ */
-const QUESTION_TYPES = [
-  { value: 'MCQ',          label: 'Multiple Choice (MCQ)' },
-  { value: 'True/False',   label: 'True / False' },
-  { value: 'Short Answer', label: 'Short Answer (SAQ)' },
-  { value: 'Fill-in',      label: 'Fill in the Blank' },
-  { value: 'Essay',        label: 'Essay / Extended Response' },
-  { value: 'Structured',   label: 'Structured (Parts a, b, c)' },
-  { value: 'Mixed',        label: 'Mixed (All Types)' }
-];
-
-/* ============================================================
-   Main Component
-============================================================ */
 const UploadConfigurePage = () => {
   const navigate = useNavigate();
+  const {
+    uploadedFiles, setUploadedFiles,
+    extractedTopics, setExtractedTopics,
+    extractStale, setExtractStale,
+    docTitle, setDocTitle,
+    boardId, setBoardId,
+    levelId, setLevelId,
+    subject, setSubject,
+    setBoardLabel, setLevelLabel,
+    selectedTemplate, setSelectedTemplate,
+    typeCounts, setTypeCounts,
+    duration, setDuration,
+    bloomLevels, setBloomLevels,
+    setGeneratedQuestions, setPaperId, setGenerateWarnings, setTotalMarks,
+    setGenerationNonce,
+  } = useGenerate();
 
-  // Step state
   const [activeTab, setActiveTab] = useState('upload');
+  const [extracting, setExtracting] = useState(false);
+  const [extractError, setExtractError] = useState('');
 
-  // Upload state
-  const [file, setFile] = useState(null);
-  const [docTitle, setDocTitle] = useState('');
-
-  // Syllabus cascade state
-  const [boardId, setBoardId] = useState('cambridge-sri-lanka');
-  const [levelId, setLevelId] = useState('cambridge-igcse');
-  const [subject, setSubject] = useState('');
-
-  // Config state
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [questionType, setQuestionType] = useState('MCQ');
-  const [questionCount, setQuestionCount] = useState(30);
-  const [duration, setDuration] = useState(45);
-  const [bloomLevels, setBloomLevels] = useState({
-    Remember: 15, Understand: 20, Apply: 30, Analyze: 25, Evaluate: 10, Create: 0
-  });
-  const [aoSplit, setAoSplit] = useState({ AO1: 35, AO2: 45, AO3: 20 });
-
-  // Derived data
   const boardOptions   = getBoardOptions();
   const levelOptions   = getLevelOptions(boardId);
   const subjectsByCat  = getSubjectsByCategory(boardId, levelId);
   const templates      = getTemplatesForBoard(boardId);
   const aoProfile      = getAoProfile(boardId);
+  const questionCount  = sumTypeCounts(typeCounts);
 
-  // Reset level and subject when board changes
   useEffect(() => {
     const firstLevel = getLevelOptions(boardId)[0];
+    const board = boardOptions.find(b => b.id === boardId);
+    if (board) setBoardLabel(board.shortLabel || board.label);
     if (firstLevel) {
       setLevelId(firstLevel.id);
+      setLevelLabel(firstLevel.label);
       setSubject('');
     }
   }, [boardId]);
 
-  // Reset subject when level changes; load default Bloom/AO
   useEffect(() => {
     setSubject('');
     const bloom = getDefaultBloom(boardId, levelId);
     setBloomLevels(bloom);
-    const ao = getDefaultAoSplit(boardId, levelId);
-    setAoSplit(ao);
+    const level = levelOptions.find(l => l.id === levelId);
+    if (level) setLevelLabel(level.label);
   }, [levelId]);
 
-  // Apply template
   const applyTemplate = (tpl) => {
     setSelectedTemplate(tpl.id);
-    setQuestionType(tpl.questionType);
-    setQuestionCount(tpl.questionCount);
+    setTypeCounts({ ...EMPTY_TYPE_COUNTS, ...tpl.typeCounts });
     setDuration(tpl.duration);
     setBloomLevels({ ...tpl.bloom });
-    setAoSplit({ ...tpl.aoSplit });
   };
 
   const handleBloomChange = (level, value) => {
     setBloomLevels(prev => ({ ...prev, [level]: value }));
   };
 
+  const setTypeCount = (key, value) => {
+    const n = Number.isNaN(parseInt(value, 10)) ? 0 : Math.max(0, Math.min(80, parseInt(value, 10)));
+    setTypeCounts(prev => ({ ...prev, [key]: n }));
+  };
+
   const totalBloom = Object.values(bloomLevels).reduce((a, b) => a + b, 0);
   const bloomValid = totalBloom === 100;
 
-  // Compute AO split from Bloom values
   const computedAo = {
     AO1: (bloomLevels.Remember || 0) + (bloomLevels.Understand || 0),
     AO2: (bloomLevels.Apply || 0)    + (bloomLevels.Analyze || 0),
     AO3: (bloomLevels.Evaluate || 0) + (bloomLevels.Create || 0)
   };
 
-  /* ============================================================
-     Render
-  ============================================================ */
+  const allLabeled = uploadedFiles.length > 0 && uploadedFiles.every(f => (f.label || '').trim());
+  const extractReady = allLabeled && !extractStale && extractedTopics.length > 0;
+  const canGoConfigure = Boolean(docTitle.trim() && subject && extractReady);
+
+  const addFiles = (fileList) => {
+    const incoming = Array.from(fileList || []);
+    const next = [...uploadedFiles];
+    incoming.forEach((file) => {
+      if (file.size > MAX_FILE_BYTES) {
+        setExtractError(`${file.name} exceeds 10 MB.`);
+        return;
+      }
+      next.push({
+        id: makeFileId(),
+        file,
+        name: file.name,
+        size: file.size,
+        label: labelFromName(file.name),
+      });
+    });
+    setUploadedFiles(next);
+    setExtractStale(true);
+    setExtractedTopics([]);
+    if (incoming.length) setExtractError('');
+  };
+
+  const updateLabel = (id, label) => {
+    setUploadedFiles(prev => prev.map(f => f.id === id ? { ...f, label } : f));
+    setExtractStale(true);
+  };
+
+  const moveFile = (index, dir) => {
+    const target = index + dir;
+    if (target < 0 || target >= uploadedFiles.length) return;
+    const next = [...uploadedFiles];
+    [next[index], next[target]] = [next[target], next[index]];
+    setUploadedFiles(next);
+    setExtractStale(true);
+  };
+
+  const removeFile = (id) => {
+    setUploadedFiles(prev => prev.filter(f => f.id !== id));
+    setExtractStale(true);
+    setExtractedTopics([]);
+  };
+
+  const handleExtract = async () => {
+    if (!allLabeled) {
+      setExtractError('Give every file a topic label before extracting.');
+      return;
+    }
+    setExtracting(true);
+    setExtractError('');
+    try {
+      const data = await extractDocuments(
+        uploadedFiles.map(f => f.file),
+        uploadedFiles.map(f => f.label.trim()),
+      );
+      setExtractedTopics(data.documents || []);
+      setExtractStale(false);
+    } catch (err) {
+      const detail = err.response?.data?.detail || err.message || 'Extraction failed.';
+      setExtractError(typeof detail === 'string' ? detail : JSON.stringify(detail));
+      setExtractedTopics([]);
+      setExtractStale(true);
+    } finally {
+      setExtracting(false);
+    }
+  };
+
+  const startGenerate = () => {
+    setGeneratedQuestions([]);
+    setPaperId(null);
+    setGenerateWarnings([]);
+    setTotalMarks(0);
+    setGenerationNonce((n) => n + 1);
+    navigate('/review');
+  };
+
   return (
     <div className="dashboard-layout">
       <Sidebar />
@@ -153,8 +206,6 @@ const UploadConfigurePage = () => {
         </header>
 
         <div className="wizard-container">
-
-          {/* Step Tabs */}
           <div className="wizard-tabs">
             <button
               className={`wizard-tab ${activeTab === 'upload' ? 'active' : ''}`}
@@ -166,57 +217,107 @@ const UploadConfigurePage = () => {
             <div className="tab-divider" />
             <button
               className={`wizard-tab ${activeTab === 'configure' ? 'active' : ''}`}
-              onClick={() => activeTab !== 'upload' && setActiveTab('configure')}
-              disabled={!file || !docTitle}
+              onClick={() => canGoConfigure && setActiveTab('configure')}
+              disabled={!canGoConfigure}
             >
               <span className="tab-step">2</span>
               <span>Configure Assessment</span>
             </button>
           </div>
 
-          {/* ── STEP 1: Upload ── */}
           {activeTab === 'upload' && (
             <div className="wizard-step animate-fade-in-up">
-
               <div className="upload-grid">
-                {/* Drop Zone */}
                 <div className="upload-left">
-                  <label className="upload-area" htmlFor="file-upload">
+                  <label
+                    className="upload-area"
+                    htmlFor="file-upload"
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      addFiles(e.dataTransfer.files);
+                    }}
+                  >
                     <input
                       id="file-upload"
                       type="file"
-                      onChange={(e) => e.target.files[0] && setFile(e.target.files[0])}
+                      multiple
+                      onChange={(e) => {
+                        addFiles(e.target.files);
+                        e.target.value = '';
+                      }}
                       hidden
                       accept=".pdf,.docx,.txt"
                     />
                     <div className="upload-icon-ring">
                       <CloudUpload size={32} />
                     </div>
-                    <h4>Drop your content file here</h4>
-                    <p className="text-small text-medium">or click to browse</p>
-                    <div className="upload-formats">PDF · DOCX · TXT · Max 10 MB</div>
+                    <h4>Drop lesson-note files here</h4>
+                    <p className="text-small text-medium">or click to browse — add one or more PDFs</p>
+                    <div className="upload-formats">PDF · DOCX · TXT · Max 10 MB each</div>
                   </label>
 
-                  {file && (
-                    <div className="file-preview-card animate-fade-in-up">
-                      <div className="file-icon">
-                        <File size={20} />
-                      </div>
-                      <div className="file-details">
-                        <span className="file-name">{file.name}</span>
-                        <span className="file-size">{(file.size / (1024 * 1024)).toFixed(2)} MB</span>
-                        <div className="progress-bar">
-                          <div className="progress-fill" style={{ width: '100%' }} />
-                        </div>
-                        <span className="upload-status">
-                          <Check size={12} /> Successfully uploaded
-                        </span>
-                      </div>
+                  {uploadedFiles.length > 0 && (
+                    <div className="file-list">
+                      {uploadedFiles.map((item, index) => {
+                        const extracted = extractedTopics.find(d => d.topic_label === item.label.trim());
+                        return (
+                          <div key={item.id} className="file-preview-card">
+                            <div className="file-icon">
+                              <File size={20} />
+                            </div>
+                            <div className="file-details">
+                              <span className="file-name">{item.name}</span>
+                              <span className="file-size">{(item.size / (1024 * 1024)).toFixed(2)} MB</span>
+                              <label className="input-label" style={{ marginTop: 8 }}>Topic label</label>
+                              <input
+                                className="select-input"
+                                value={item.label}
+                                placeholder="e.g. Forces & Motion"
+                                onChange={(e) => updateLabel(item.id, e.target.value)}
+                              />
+                              {extracted && !extractStale && (
+                                <span className="upload-status">
+                                  <Check size={12} /> {extracted.char_count.toLocaleString()} characters extracted
+                                </span>
+                              )}
+                              {extracted?.warnings?.length > 0 && !extractStale && (
+                                <p className="helper-text">{extracted.warnings[0]}</p>
+                              )}
+                            </div>
+                            <div className="file-reorder">
+                              <button type="button" className="icon-btn" disabled={index === 0} onClick={() => moveFile(index, -1)} aria-label="Move up">
+                                <ChevronUp size={16} />
+                              </button>
+                              <button type="button" className="icon-btn" disabled={index === uploadedFiles.length - 1} onClick={() => moveFile(index, 1)} aria-label="Move down">
+                                <ChevronDown size={16} />
+                              </button>
+                              <button type="button" className="icon-btn text-danger" onClick={() => removeFile(item.id)} aria-label="Remove">
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {extractError && <p className="extract-error">{extractError}</p>}
+
+                  {extractedTopics.length > 0 && !extractStale && (
+                    <div className="combined-preview">
+                      <h4>Combined extraction preview</h4>
+                      <p className="text-small text-medium">
+                        {extractedTopics.reduce((sum, d) => sum + (d.char_count || 0), 0).toLocaleString()} characters
+                        from {extractedTopics.length} topic{extractedTopics.length === 1 ? '' : 's'} (order matches the list above)
+                      </p>
+                      <pre className="extract-preview-text">
+                        {extractedTopics.map(d => `## ${d.topic_label}\n${(d.text || '').slice(0, 400)}${(d.text || '').length > 400 ? '…' : ''}`).join('\n\n')}
+                      </pre>
                     </div>
                   )}
                 </div>
 
-                {/* Syllabus Cascade */}
                 <div className="upload-right">
                   <div className="syllabus-card">
                     <div className="syllabus-card-header">
@@ -224,7 +325,6 @@ const UploadConfigurePage = () => {
                       <span>Syllabus Configuration</span>
                     </div>
 
-                    {/* Document Title */}
                     <div className="form-group">
                       <Input
                         label="Assessment Title"
@@ -235,7 +335,6 @@ const UploadConfigurePage = () => {
                       <p className="helper-text">Used as the heading on your generated paper</p>
                     </div>
 
-                    {/* Board Selector */}
                     <div className="form-group">
                       <label className="input-label">Exam Board</label>
                       <div className="board-options">
@@ -253,7 +352,6 @@ const UploadConfigurePage = () => {
                       </div>
                     </div>
 
-                    {/* Level Selector */}
                     <div className="form-group">
                       <label className="input-label">Qualification Level</label>
                       <select
@@ -267,7 +365,6 @@ const UploadConfigurePage = () => {
                       </select>
                     </div>
 
-                    {/* Subject Selector — grouped by category */}
                     <div className="form-group">
                       <label className="input-label">Subject</label>
                       <select
@@ -279,7 +376,7 @@ const UploadConfigurePage = () => {
                         {Object.entries(subjectsByCat).map(([cat, subjects]) => (
                           <optgroup key={cat} label={cat}>
                             {subjects.map(s => (
-                              <option key={s.code} value={s.name}>
+                              <option key={s.code || s.name} value={s.name}>
                                 {s.name} {s.code ? `(${s.code})` : ''}
                               </option>
                             ))}
@@ -296,9 +393,17 @@ const UploadConfigurePage = () => {
 
               <div className="step-actions">
                 <Button
+                  variant="secondary"
+                  icon={extracting ? Loader2 : Sparkles}
+                  disabled={!allLabeled || extracting}
+                  onClick={handleExtract}
+                >
+                  {extracting ? 'Extracting…' : extractReady ? 'Re-extract text' : 'Extract text'}
+                </Button>
+                <Button
                   variant="primary"
                   icon={Sparkles}
-                  disabled={!file || !docTitle || !subject}
+                  disabled={!canGoConfigure}
                   onClick={() => setActiveTab('configure')}
                 >
                   Next: Configure Assessment
@@ -307,20 +412,15 @@ const UploadConfigurePage = () => {
             </div>
           )}
 
-          {/* ── STEP 2: Configure ── */}
           {activeTab === 'configure' && (
             <div className="wizard-step animate-fade-in-up">
               <div className="config-grid">
-
-                {/* LEFT — Templates + Primary Settings */}
                 <div className="config-main">
-
-                  {/* Paper Template Selector */}
                   <section className="config-section">
                     <div className="section-title-group">
                       <h4>Paper Structure Template</h4>
                       <p className="text-small text-medium">
-                        Select a preset — it auto-fills question count, type, and Bloom's distribution
+                        Select a preset — it auto-fills question counts, duration, and Bloom&apos;s distribution
                       </p>
                     </div>
                     <div className="template-cards-grid">
@@ -356,73 +456,57 @@ const UploadConfigurePage = () => {
                     </div>
                   </section>
 
-                  {/* Primary Settings */}
                   <section className="config-section">
                     <div className="section-title-group">
                       <h4>Assessment Settings</h4>
-                      <p className="text-small text-medium">Fine-tune the paper details</p>
+                      <p className="text-small text-medium">Set how many questions of each type to generate</p>
                     </div>
-                    <div className="form-row">
-                      <div className="form-group flex-1">
-                        <label className="input-label">Question Type</label>
-                        <select
-                          className="select-input"
-                          value={questionType}
-                          onChange={(e) => setQuestionType(e.target.value)}
-                        >
-                          {QUESTION_TYPES.map(qt => (
-                            <option key={qt.value} value={qt.value}>{qt.label}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="form-group" style={{ width: '110px' }}>
-                        <Input
-                          label="Count"
-                          type="number"
-                          value={questionCount}
-                          onChange={(e) => setQuestionCount(parseInt(e.target.value))}
-                          min="1" max="100"
-                        />
-                      </div>
-                      <div className="form-group" style={{ width: '110px' }}>
-                        <Input
-                          label="Duration (min)"
-                          type="number"
-                          value={duration}
-                          onChange={(e) => setDuration(parseInt(e.target.value))}
-                          min="10" max="240"
-                        />
-                      </div>
+                    <div className="type-count-grid">
+                      {QUESTION_TYPES.map(qt => (
+                        <div key={qt.value} className="type-count-field">
+                          <label className="input-label">{qt.label}</label>
+                          <input
+                            className="select-input"
+                            type="number"
+                            min="0"
+                            max="80"
+                            value={typeCounts[qt.value] ?? 0}
+                            onChange={(e) => setTypeCount(qt.value, e.target.value)}
+                          />
+                        </div>
+                      ))}
                     </div>
-
-                    {/* Summary chips */}
+                    <div className="form-group" style={{ width: '140px', marginTop: 16 }}>
+                      <Input
+                        label="Duration (min)"
+                        type="number"
+                        value={duration}
+                        onChange={(e) => setDuration(parseInt(e.target.value) || 0)}
+                        min="10" max="240"
+                      />
+                    </div>
                     <div className="config-summary">
-                      <span className="chip">📚 {boardOptions.find(b => b.id === boardId)?.shortLabel}</span>
-                      <span className="chip">🎓 {levelOptions.find(l => l.id === levelId)?.label?.split('(')[0].trim()}</span>
-                      <span className="chip">📖 {subject}</span>
-                      <span className="chip">⏱ {duration} min</span>
-                      <span className="chip">📝 {questionCount} questions</span>
+                      <span className="chip">{boardOptions.find(b => b.id === boardId)?.shortLabel}</span>
+                      <span className="chip">{levelOptions.find(l => l.id === levelId)?.label?.split('(')[0].trim()}</span>
+                      <span className="chip">{subject}</span>
+                      <span className="chip">{duration} min</span>
+                      <span className="chip">{questionCount} questions</span>
                     </div>
                   </section>
                 </div>
 
-                {/* RIGHT — Bloom's + AO Panel */}
                 <div className="config-side">
-
-                  {/* Bloom's Distribution */}
                   <section className="config-section">
                     <div className="section-title-group">
-                      <h4>Bloom's Taxonomy Distribution</h4>
+                      <h4>Bloom&apos;s Taxonomy Distribution</h4>
                       <p className="text-small text-medium">Set cognitive level targets — must total 100%</p>
                     </div>
-
                     <div className={`bloom-total-badge ${bloomValid ? 'valid' : 'invalid'}`}>
                       {bloomValid
                         ? <><Check size={13} /> 100% — Ready</>
                         : <><Info size={13} /> {totalBloom}% — Needs {100 - totalBloom > 0 ? '+' : ''}{100 - totalBloom}%</>
                       }
                     </div>
-
                     <div className="bloom-sliders">
                       {Object.entries(bloomLevels).map(([level, value]) => (
                         <BloomSlider
@@ -436,7 +520,6 @@ const UploadConfigurePage = () => {
                     </div>
                   </section>
 
-                  {/* AO Mapping Panel */}
                   {aoProfile && (
                     <section className="config-section">
                       <div className="section-title-group">
@@ -469,7 +552,7 @@ const UploadConfigurePage = () => {
                       </div>
                       <p className="helper-text" style={{ marginTop: '8px' }}>
                         <Info size={11} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
-                        AO percentages are computed from your Bloom's distribution above
+                        AO percentages are computed from your Bloom&apos;s distribution above
                       </p>
                     </section>
                   )}
@@ -483,15 +566,14 @@ const UploadConfigurePage = () => {
                 <Button
                   variant="primary"
                   icon={Sparkles}
-                  disabled={!bloomValid}
-                  onClick={() => navigate('/review')}
+                  disabled={!bloomValid || questionCount < 1}
+                  onClick={startGenerate}
                 >
                   Generate Questions
                 </Button>
               </div>
             </div>
           )}
-
         </div>
       </main>
     </div>

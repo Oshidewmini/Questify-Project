@@ -92,3 +92,62 @@
 .icon-btn:hover {
   background-color: var(--color-background-alt);
 }
+
+.empty-state {
+  text-align: center;
+  padding: 64px 24px;
+  color: var(--color-text-muted);
+}
+
+.library-controls {
+  flex-wrap: wrap;
+}
+
+.control-actions {
+  flex-wrap: wrap;
+}
+
+.questions-bank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.question-bank-row {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-m);
+}
+
+.question-bank-summary {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 16px 20px;
+  cursor: pointer;
+  color: inherit;
+}
+
+.question-bank-stem {
+  margin: 0 0 8px;
+  color: var(--color-text-dark);
+  font-weight: 600;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.question-bank-detail {
+  padding: 0 12px 12px;
+}
+
+.question-bank-detail .question-card {
+  margin-bottom: 0;
+  box-shadow: none;
+}

@@ -29,50 +29,52 @@ const AnalyticsPage = () => {
           <p className="screen-subtitle">Track your question generation patterns and quality metrics</p>
         </header>
 
-        <section className="analytics-grid">
-          <div className="analytics-card">
-            <h3 className="section-title"><Award size={20} /> Bloom's Taxonomy Distribution</h3>
-            <div className="bloom-distribution-list">
-              {bloomDistribution.map((item, index) => (
-                <ProgressBar 
-                  key={index}
-                  label={item.label}
-                  progress={item.progress}
-                  target={item.target}
-                  color={item.color}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="analytics-card">
-            <h3 className="section-title"><Target size={20} /> Cambridge Assessment Objectives</h3>
-            <div className="ao-metrics-grid">
-              {assessmentObjectives.map((ao, index) => (
-                <div key={index} className="ao-metric-card">
-                  <span className="ao-value">{ao.value}</span>
-                  <span className="ao-label">{ao.label}</span>
-                  <span className={`ao-status ${ao.status}`}>
-                    {ao.status === 'success' ? '✓' : '⚠'} Target: {ao.target}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="quality-trends">
-          <div className="analytics-card">
-            <h3 className="section-title"><TrendingUp size={20} /> Quality Score Trends</h3>
-            <div className="mock-chart">
-              {/* This would be a real chart in a full app */}
-              <div className="chart-placeholder">
-                <BarChart3 size={48} color="var(--color-border)" />
-                <p>Generation Quality vs Time (Last 30 Days)</p>
+        <div className="page-body">
+          <section className="analytics-grid">
+            <div className="analytics-card">
+              <h3 className="section-title"><Award size={20} /> Bloom's Taxonomy Distribution</h3>
+              <div className="bloom-distribution-list">
+                {bloomDistribution.map((item, index) => (
+                  <ProgressBar 
+                    key={index}
+                    label={item.label}
+                    progress={item.progress}
+                    target={item.target}
+                    color={item.color}
+                  />
+                ))}
               </div>
             </div>
-          </div>
-        </section>
+
+            <div className="analytics-card">
+              <h3 className="section-title"><Target size={20} /> Cambridge Assessment Objectives</h3>
+              <div className="ao-metrics-grid">
+                {assessmentObjectives.map((ao, index) => (
+                  <div key={index} className="ao-metric-card">
+                    <span className="ao-value">{ao.value}</span>
+                    <span className="ao-label">{ao.label}</span>
+                    <span className={`ao-status ${ao.status}`}>
+                      {ao.status === 'success' ? '✓' : '⚠'} Target: {ao.target}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
+          <section className="quality-trends">
+            <div className="analytics-card">
+              <h3 className="section-title"><TrendingUp size={20} /> Quality Score Trends</h3>
+              <div className="mock-chart">
+                {/* This would be a real chart in a full app */}
+                <div className="chart-placeholder">
+                  <BarChart3 size={48} color="var(--color-border)" />
+                  <p>Generation Quality vs Time (Last 30 Days)</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
       </main>
     </div>
   );

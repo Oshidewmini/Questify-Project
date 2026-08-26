@@ -232,15 +232,6 @@
   padding: 8px 4px;
 }
 
-.user-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid var(--color-border);
-  flex-shrink: 0;
-}
-
 .user-info {
   flex: 1;
   display: flex;

@@ -42,6 +42,11 @@
   margin-top: 4px;
 }
 
+.extract-error {
+  color: var(--color-error);
+  font-size: 13px;
+}
+
 .review-container {
   display: grid;
   grid-template-columns: 280px 1fr;

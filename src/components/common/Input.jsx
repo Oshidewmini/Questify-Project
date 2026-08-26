@@ -35,6 +35,7 @@ export const Input = ({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           disabled={disabled}
+          required={required}
           className="input-field"
           {...props}
         />

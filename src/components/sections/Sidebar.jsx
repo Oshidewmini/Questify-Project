@@ -4,11 +4,14 @@ import {
   LogOut, Sun, Moon, ChevronRight
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import './Sidebar.css';
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, profile, logout } = useAuth();
+  const displayName = profile?.name || user?.email?.split('@')[0] || 'Teacher';
 
   // Default to dark (navy blue) theme
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
@@ -75,16 +78,18 @@ const Sidebar = () => {
 
         {/* User profile */}
         <div className="sidebar-user">
-          <img
-            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-            alt="User"
-            className="user-avatar"
-          />
           <div className="user-info">
-            <span className="user-name">Mr. John Smith</span>
-            <span className="user-email">john.smith@school.com</span>
+            <span className="user-name">{displayName}</span>
+            <span className="user-email">{user?.email || ''}</span>
           </div>
-          <button className="logout-icon-btn" onClick={() => navigate('/login')} title="Logout">
+          <button
+            className="logout-icon-btn"
+            onClick={async () => {
+              await logout();
+              navigate('/login');
+            }}
+            title="Logout"
+          >
             <LogOut size={16} />
           </button>
         </div>

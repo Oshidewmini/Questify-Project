@@ -161,3 +161,24 @@
 .action-btn.text-danger {
   color: var(--color-error);
 }
+
+.structured-parts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-left: 8px;
+}
+
+.structured-part p {
+  color: var(--color-text-dark);
+  margin: 0;
+}
+
+.structured-answer {
+  margin-bottom: 10px;
+}
+
+.structured-answer ul,
+.answer-content ul {
+  margin: 6px 0 0 18px;
+}

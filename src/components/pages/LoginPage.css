@@ -19,6 +19,10 @@
   transition: all 0.3s ease;
 }
 
+.login-card-signup {
+  max-width: 460px;
+}
+
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
@@ -73,6 +77,17 @@
 .signup-link {
   color: var(--color-accent);
   font-weight: var(--font-weight-semibold);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: inherit;
+}
+
+.login-error {
+  color: #dc2626;
+  font-size: var(--font-size-body-small);
+  margin: 0;
 }
 
 .legal-links {
