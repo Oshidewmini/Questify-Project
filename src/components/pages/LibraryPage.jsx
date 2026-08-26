@@ -7,12 +7,17 @@ import { getPapers, getQuestions } from '../../data/db';
 import { buildExportPayload, downloadBlob, exportDocx } from '../../services/api';
 import { QUESTION_TYPES } from '../../data/questionTypes';
 import QuestionCard from '../sections/QuestionCard';
+import { useAuth } from '../../context/AuthContext';
+import { useGenerate } from '../../context/GenerateContext';
 import './LibraryPage.css';
 
 const LibraryPage = () => {
+  const { user } = useAuth();
+  const { libraryEpoch } = useGenerate();
   const [questions, setQuestions] = useState([]);
   const [papers, setPapers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [bloomFilter, setBloomFilter] = useState('all');
@@ -23,19 +28,24 @@ const LibraryPage = () => {
   const [downloadingId, setDownloadingId] = useState(null);
 
   useEffect(() => {
+    if (!user?.uid) return;
     const fetchData = async () => {
+      setLoading(true);
+      setError('');
       try {
         const [qs, ps] = await Promise.all([getQuestions(), getPapers()]);
         setQuestions(qs);
         setPapers(ps);
-      } catch (error) {
-        console.error('Failed to load question bank:', error);
+      } catch (err) {
+        setError(err.message || 'Failed to load question bank.');
+        setQuestions([]);
+        setPapers([]);
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, []);
+  }, [user?.uid, libraryEpoch]);
 
   const subjects = [...new Set(questions.map((q) => q.subject).filter(Boolean))];
   const blooms = [...new Set(questions.map((q) => q.bloom_level).filter(Boolean))];
@@ -156,11 +166,22 @@ const LibraryPage = () => {
 
           <section className="questions-bank-list">
             {loading ? (
-              <p style={{ textAlign: 'center', padding: '40px', color: 'var(--color-text-muted)' }}>Loading questions...</p>
+              <p className="library-status">Loading questions...</p>
+            ) : error ? (
+              <div className="empty-state">
+                <FileText size={48} color="var(--color-border)" />
+                <p>{error}</p>
+              </div>
             ) : filtered.length === 0 ? (
               <div className="empty-state">
                 <FileText size={48} color="var(--color-border)" />
-                <p>No questions yet. Generate an exam to populate your question bank.</p>
+                <p>
+                  {papers.length > 0 && questions.length === 0
+                    ? 'These papers have no saved questions. Generate again or re-export to save questions to the bank.'
+                    : questions.length === 0
+                      ? 'No questions yet. Generate an exam to populate your question bank.'
+                      : 'No questions match these filters.'}
+                </p>
               </div>
             ) : (
               filtered.map((q) => {

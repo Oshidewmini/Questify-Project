@@ -68,7 +68,7 @@ const ReviewPage = () => {
     generatedQuestions, setGeneratedQuestions,
     generateWarnings, setGenerateWarnings,
     paperId, setPaperId, totalMarks, setTotalMarks,
-    generationNonce,
+    generationNonce, notifyLibraryChanged,
   } = useGenerate();
 
   const [generationProgress, setGenerationProgress] = useState(0);
@@ -138,6 +138,7 @@ const ReviewPage = () => {
         setGenerateWarnings(data.warnings || []);
         setGenerationProgress(100);
         setPaperId(saved.paper.id);
+        notifyLibraryChanged();
       } catch (err) {
         if (cancelled) return;
         const detail = err.response?.data?.detail || err.message || 'Generation failed.';
@@ -186,6 +187,7 @@ const ReviewPage = () => {
           topic_labels: extractedTopics.map((t) => t.topic_label),
         }, generatedQuestions);
         setPaperId(saved.paper.id);
+        notifyLibraryChanged();
       } catch (err) {
         alert(err.message || 'Failed to save paper.');
         setIsSaving(false);

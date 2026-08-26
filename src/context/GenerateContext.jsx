@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { EMPTY_TYPE_COUNTS } from '../data/questionTypes';
 
 const GenerateContext = createContext(null);
@@ -29,6 +29,11 @@ export const GenerateProvider = ({ children }) => {
   const [paperId, setPaperId] = useState(null);
   const [totalMarks, setTotalMarks] = useState(0);
   const [generationNonce, setGenerationNonce] = useState(0);
+  const [libraryEpoch, setLibraryEpoch] = useState(0);
+
+  const notifyLibraryChanged = useCallback(() => {
+    setLibraryEpoch((n) => n + 1);
+  }, []);
 
   const resetSession = () => {
     setUploadedFiles([]);
@@ -66,11 +71,14 @@ export const GenerateProvider = ({ children }) => {
     paperId, setPaperId,
     totalMarks, setTotalMarks,
     generationNonce, setGenerationNonce,
+    libraryEpoch,
+    notifyLibraryChanged,
     resetSession,
   }), [
     uploadedFiles, extractedTopics, extractStale, docTitle, boardId, levelId,
     subject, boardLabel, levelLabel, selectedTemplate, typeCounts, duration,
-    bloomLevels, generatedQuestions, generateWarnings, paperId, totalMarks, generationNonce,
+    bloomLevels, generatedQuestions, generateWarnings, paperId, totalMarks,
+    generationNonce, libraryEpoch, notifyLibraryChanged,
   ]);
 
   return (

@@ -93,6 +93,12 @@
   background-color: var(--color-background-alt);
 }
 
+.library-status {
+  text-align: center;
+  padding: 40px;
+  color: var(--color-text-muted);
+}
+
 .empty-state {
   text-align: center;
   padding: 64px 24px;
@@ -131,6 +137,11 @@
   padding: 16px 20px;
   cursor: pointer;
   color: inherit;
+}
+
+.question-bank-summary > div {
+  min-width: 0;
+  flex: 1;
 }
 
 .question-bank-stem {

@@ -41,12 +41,38 @@ const toPaper = (snapshot) => ({
   ...snapshot.data(),
 });
 
-const sortByCreatedAtDesc = (papers) =>
-  [...papers].sort((a, b) => {
-    const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
-    const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
-    return bTime - aTime;
-  });
+export const toDate = (value) => {
+  if (!value) return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if (typeof value.toDate === 'function') return value.toDate();
+  if (typeof value.toMillis === 'function') return new Date(value.toMillis());
+  if (typeof value.seconds === 'number') return new Date(value.seconds * 1000);
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+
+const toMillis = (value) => {
+  const d = toDate(value);
+  return d ? d.getTime() : 0;
+};
+
+const stripUndefined = (value) => {
+  if (Array.isArray(value)) {
+    return value.map(stripUndefined);
+  }
+  if (value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype) {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) {
+      if (v === undefined) continue;
+      out[k] = stripUndefined(v);
+    }
+    return out;
+  }
+  return value;
+};
+
+const sortByCreatedAtDesc = (items) =>
+  [...items].sort((a, b) => toMillis(b.created_at) - toMillis(a.created_at));
 
 const generateId = () =>
   `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -72,8 +98,8 @@ const writeJSON = (key, value) => {
 export const savePaper = async (paper) => {
   const user = requireUser();
   const now = new Date().toISOString();
-  const payload = {
-    title: paper.title,
+  const payload = stripUndefined({
+    title: paper.title ?? '',
     subject: paper.subject ?? null,
     exam_board: paper.exam_board ?? null,
     qualification_level: paper.qualification_level ?? null,
@@ -88,7 +114,7 @@ export const savePaper = async (paper) => {
     userId: user.uid,
     created_at: now,
     updated_at: now,
-  };
+  });
   const ref = await addDoc(papersCol(), payload);
   return { id: ref.id, ...payload };
 };
@@ -98,11 +124,11 @@ export const saveQuestions = async (paperId, paperMeta, questions) => {
   const now = new Date().toISOString();
   const saved = [];
   for (const q of questions || []) {
-    const payload = {
+    const payload = stripUndefined({
       paperId,
       paperTitle: paperMeta.title ?? null,
       userId: user.uid,
-      text: q.text,
+      text: q.text ?? '',
       answer: q.answer ?? null,
       mark_value: q.mark_value ?? q.marks ?? 1,
       bloom_level: q.bloom_level ?? q.bloom ?? null,
@@ -117,7 +143,7 @@ export const saveQuestions = async (paperId, paperMeta, questions) => {
       exam_board: paperMeta.exam_board ?? null,
       qualification_level: paperMeta.qualification_level ?? null,
       created_at: now,
-    };
+    });
     const ref = await addDoc(questionsCol(), payload);
     saved.push({ id: ref.id, ...payload });
   }
